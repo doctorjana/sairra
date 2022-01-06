@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="SAIRRA">
+    <meta name="author" content="Doctor Jana">
+    <title>SAIRRA Viewer</title>
+
+  </head>
+  <body>
+    <!-- Main container div -->
+    <div id="dwv">
+        <img id="spinner" src="images/spinner.gif">
+      <div id="layerGroup0"></div>
+    </div>
+
+    <input type="range" id="sliceRange" value="0">
+      <script src="js/dwv-0.30.4.min.js"></script>
+      <script type="module">
+      // create the dwv app
+var app = new dwv.App();
+// initialise with the id of the container div
+app.init({
+  dataViewConfigs: {'*': [{divId: 'layerGroup0'}]},
+  tools: {
+    Scroll: {}
+  }
+});
+// activate tool once done loading
+app.addEventListener('load', function () {
+    
+  let spinner = document.getElementById("spinner");
+    spinner.style = "display:none";
+  app.setTool('Scroll');
+});
+          
+let prefix = "/temp/ (";
+let postfix = ").dcm";
+var count = 85;
+
+
+var arr = []    
+          
+for(var i = 1; i < count; i++){
+    //code goes here
+    let urlString = prefix+i+postfix;
+    arr.push(urlString)
+}    
+// load dicom data
+app.loadURLs(arr);
+
+// 
+var range = document.getElementById('sliceRange');
+range.min = 0;
+app.addEventListener('loadend', function () {
+  range.max = app.getImage(0).getGeometry().getSize().get(2) - 1;
+});
+app.addEventListener('slicechange', function () {
+  // update slider on slice change (for ex via mouse wheel)
+  var lg = app.getLayerGroupById(0);
+  var vc = lg.getActiveViewLayer().getViewController();
+  range.value = vc.getCurrentPosition().k;
+});
+range.oninput = function () {
+  var lg = app.getLayerGroupById(0);
+  var vc = lg.getActiveViewLayer().getViewController();
+  var index = vc.getCurrentIndex();
+  var values = index.getValues();
+  values[2] = this.value;
+  vc.setCurrentIndex(new dwv.math.Index(values));
+}
+</script>
+  </body>
+</html>
